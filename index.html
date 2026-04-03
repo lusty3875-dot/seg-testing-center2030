@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEG | Digital Testing Center</title>
+    <style>
+        :root { --primary: #003057; --accent: #fbbc05; --bg: #d1d1d1; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
+        .navbar { background: var(--primary); color: white; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; border-bottom: 6px solid var(--accent); }
+        .container { width: 90%; max-width: 1000px; margin: 30px auto; background: white; padding: 30px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); flex: 1; }
+        .menu-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-top: 20px; }
+        .card { border: 1px solid #ddd; padding: 15px; border-radius: 15px; text-align: center; cursor: pointer; transition: 0.3s; background: #fff; min-height: 100px; display: flex; align-items: center; justify-content: center; }
+        .card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .card h3 { margin: 0; color: var(--primary); font-size: 14px; }
+        .hidden { display: none; }
+        .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; margin-top: 10px; }
+        input[type="text"], textarea { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
+        #timer-display { font-size: 20px; font-weight: bold; color: #dc3545; margin-bottom: 15px; }
+        footer { text-align: center; padding: 20px; font-weight: bold; color: var(--primary); }
+        @media (max-width: 800px) { .menu-grid { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+</head>
+<body>
+<div class="navbar">SEG DIGITAL TESTING CENTER</div>
+<div class="container">
+    <div id="menu-step">
+        <h2 style="text-align: center;">Choose Your Discipline</h2>
+        <div class="menu-grid">
+            <div class="card" onclick="goToSetup('Daily Homework', 20)"><h3>Daily Homework (20mn)</h3></div>
+            <div class="card" onclick="goToSetup('Weekly Homework', 30)"><h3>Weekly Homework (30mn)</h3></div>
+            <div class="card" onclick="goToSetup('Lesson Quiz', 15)"><h3>Lesson Quiz (15mn)</h3></div>
+            <div class="card" onclick="goToSetup('Monthly Test', 45)"><h3>Monthly Test (45mn)</h3></div>
+            <div class="card" onclick="goToSetup('Reading Test', 20)"><h3>Reading Test (20mn)</h3></div>
+            <div class="card" onclick="goToSetup('Listening Test', 20)"><h3>Listening Test (20mn)</h3></div>
+            <div class="card" onclick="goToSetup('Grammar Quiz', 15)"><h3>Grammar Quiz (15mn)</h3></div>
+            <div class="card" onclick="goToSetup('Vocabulary Test', 15)"><h3>Vocabulary Test (15mn)</h3></div>
+            <div class="card" onclick="goToSetup('Midterm Exam', 60)"><h3>Midterm Exam (60mn)</h3></div>
+            <div class="card" onclick="goToSetup('Final Exam', 60)"><h3>Final Exam (60mn)</h3></div>
+        </div>
+    </div>
+    <div id="setup-step" class="hidden">
+        <h2 id="setup-title" style="text-align:center;"></h2>
+        <textarea id="json-input" rows="10" placeholder='Paste JSON here...'></textarea>
+        <button class="btn" onclick="startExam()">Generate Test</button>
+    </div>
+    <div id="exam-step" class="hidden">
+        <div style="text-align: center;"><div id="timer-display">Time Left: 00:00</div></div>
+        <input type="text" id="student-name" placeholder="Student Full Name">
+        <div id="questions-container"></div>
+        <button class="btn" style="background:#28a745;" onclick="finishExam()">Submit Result</button>
+    </div>
+    <div id="result-step" class="hidden" style="text-align: center;">
+        <h2 style="color:#28a745;">Test Completed!</h2>
+        <h3 id="res-name"></h3>
+        <p>Final Score:</p>
+        <h1 id="res-score" style="font-size: 70px; color: var(--primary);"></h1>
+        <button class="btn" onclick="location.reload()">Back to Menu</button>
+    </div>
+</div>
+<footer>AN EXCLUSIVE DIGITAL ASSET OF SEG<br><span style="font-size:12px; font-weight:normal;">Developed by CHAN Sokhoeurn, C2/DBA</span></footer>
+<script>
+    let examData = []; let timeLeft; let timerInterval; let selectedDuration = 0;
+    function goToSetup(t, d) {
+        selectedDuration = d;
+        document.getElementById('menu-step').classList.add('hidden');
+        document.getElementById('setup-step').classList.remove('hidden');
+        document.getElementById('setup-title').innerText = t;
+    }
+    function startExam() {
+        try {
+            examData = JSON.parse(document.getElementById('json-input').value);
+            document.getElementById('setup-step').classList.add('hidden');
+            document.getElementById('exam-step').classList.remove('hidden');
+            let html = "";
+            examData.forEach((item, index) => {
+                html += `<div style="background:#f4f4f4; padding:15px; border-radius:10px; margin-bottom:10px; border-left:5px solid var(--accent); text-align:left;">
+                    <p><b>${index+1}. ${item[0]}</b></p>
+                    <label style="display:block;"><input type="radio" name="q${index}" value="${item[1]}"> ${item[1]}</label>
+                    <label style="display:block;"><input type="radio" name="q${index}" value="${item[2]}"> ${item[2]}</label>
+                    <label style="display:block;"><input type="radio" name="q${index}" value="${item[3]}"> ${item[3]}</label>
+                </div>`;
+            });
+            document.getElementById('questions-container').innerHTML = html;
+            startTimer(selectedDuration);
+        } catch (e) { alert("JSON Error! Please check your format."); }
+    }
+    function startTimer(m) {
+        timeLeft = m * 60;
+        timerInterval = setInterval(() => {
+            let mins = Math.floor(timeLeft / 60); let secs = timeLeft % 60;
+            document.getElementById('timer-display').innerText = `Time Left: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            if (timeLeft <= 0) { clearInterval(timerInterval); finishExam(true); }
+            timeLeft--;
+        }, 1000);
+    }
+    function finishExam(auto = false) {
+        const name = document.getElementById('student-name').value;
+        if (!name && !auto) { alert("Enter Student Name!"); return; }
+        clearInterval(timerInterval);
+        let score = 0;
+        examData.forEach((item, index) => {
+            const sel = document.querySelector(`input[name="q${index}"]:checked`);
+            if (sel && sel.value === item[4]) score++;
+        });
+        document.getElementById('exam-step').classList.add('hidden');
+        document.getElementById('result-step').classList.remove('hidden');
+        document.getElementById('res-name').innerText = "Student: " + name;
+        document.getElementById('res-score').innerText = score + " / " + examData.length;
+    }
+</script>
+</body>
+</html>
